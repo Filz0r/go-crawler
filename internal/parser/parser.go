@@ -108,24 +108,24 @@ func GetImagesFromHTML(htmlBody string, baseURL *url.URL) ([]string, error) {
 	return images, nil
 }
 
-func extractPageData(html, pageURL string) PageData {
+func ExtractPageData(html, pageURL string) (PageData, error) {
 	result := PageData{}
-	url, err := url.Parse(pageURL)
+	_url, err := url.Parse(pageURL)
 	if err != nil {
-		log.Fatal(err)
+		return PageData{}, err
 	}
 	result.URL = pageURL
 	result.Heading = GetHeadingFromHTML(html)
 	result.FirstParagraph = GetFirstParagraphFromHTML(html)
-	outgoingLinks, err := GetURLsFromHTML(html, url)
+	outgoingLinks, err := GetURLsFromHTML(html, _url)
 	if err != nil {
-		log.Fatal(err)
+		return PageData{}, err
 	}
 	result.OutgoingLinks = outgoingLinks
-	imageURLs, err := GetImagesFromHTML(html, url)
+	imageURLs, err := GetImagesFromHTML(html, _url)
 	if err != nil {
-		log.Fatal(err)
+		return PageData{}, err
 	}
 	result.ImageURLs = imageURLs
-	return result
+	return result, nil
 }

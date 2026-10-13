@@ -342,7 +342,10 @@ func TestExtractPageData(t *testing.T) {
         <img src="/image1.jpg" alt="Image 1">
     </body></html>`
 
-	actual := extractPageData(inputBody, inputURL)
+	actual, err := ExtractPageData(inputBody, inputURL)
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com",
@@ -369,7 +372,10 @@ func TestExtractPageDataFullPage(t *testing.T) {
 		<img src="https://cdn.example.com/banner.png">
 	</body></html>`
 
-	actual := extractPageData(inputBody, "https://crawler-test.com")
+	actual, err := ExtractPageData(inputBody, "https://crawler-test.com")
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com",
@@ -390,7 +396,10 @@ func TestExtractPageDataH2Fallback(t *testing.T) {
 		<p>Some paragraph.</p>
 	</body></html>`
 
-	actual := extractPageData(inputBody, "https://crawler-test.com/fallback")
+	actual, err := ExtractPageData(inputBody, "https://crawler-test.com/fallback")
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com/fallback",
@@ -414,7 +423,10 @@ func TestExtractPageDataMainParagraphPriority(t *testing.T) {
 		</main>
 	</body></html>`
 
-	actual := extractPageData(inputBody, "https://crawler-test.com/landing")
+	actual, err := ExtractPageData(inputBody, "https://crawler-test.com/landing")
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com/landing",
@@ -430,7 +442,10 @@ func TestExtractPageDataMainParagraphPriority(t *testing.T) {
 }
 
 func TestExtractPageDataEmptyBody(t *testing.T) {
-	actual := extractPageData("<html><body></body></html>", "https://crawler-test.com/empty")
+	actual, err := ExtractPageData("<html><body></body></html>", "https://crawler-test.com/empty")
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com/empty",
@@ -454,7 +469,10 @@ func TestExtractPageDataLinksRelativeToPageURL(t *testing.T) {
 	</body></html>`
 
 	// trailing slash matters: relative links resolve against the page's directory
-	actual := extractPageData(inputBody, "https://crawler-test.com/section/")
+	actual, err := ExtractPageData(inputBody, "https://crawler-test.com/section/")
+	if err != nil {
+		t.Errorf("Error extracting page data: %v", err)
+	}
 
 	expected := PageData{
 		URL:            "https://crawler-test.com/section/",
