@@ -16,9 +16,10 @@ type Config struct {
 	mu                 *sync.Mutex
 	concurrencyControl chan struct{}
 	wg                 *sync.WaitGroup
+	maxPages           int
 }
 
-func NewCrawler(baseUrl string, maxConcurrency int) (*Config, error) {
+func NewCrawler(baseUrl string, maxPages, maxConcurrency int) (*Config, error) {
 	if maxConcurrency <= 0 {
 		return nil, fmt.Errorf("maxConcurrency must be positive: %d", maxConcurrency)
 	} else if maxConcurrency > 32 {
@@ -34,6 +35,7 @@ func NewCrawler(baseUrl string, maxConcurrency int) (*Config, error) {
 		concurrencyControl: make(chan struct{}, maxConcurrency),
 		wg:                 &sync.WaitGroup{},
 		mu:                 &sync.Mutex{},
+		maxPages:           maxPages,
 	}
 	return result, nil
 }
@@ -41,6 +43,11 @@ func NewCrawler(baseUrl string, maxConcurrency int) (*Config, error) {
 func (c *Config) shouldCrawl(normalizedURL string) (shouldCrawl bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if len(c.Pages) >= c.maxPages {
+		return false
+	}
+
 	_, seen := c.Pages[normalizedURL]
 	if seen {
 		return false
@@ -53,6 +60,13 @@ func (c *Config) crawlPage(rawCurrentURL string) {
 	defer c.wg.Done()
 	defer func() { <-c.concurrencyControl }()
 	c.concurrencyControl <- struct{}{}
+
+	c.mu.Lock()
+	atLimit := len(c.Pages) >= c.maxPages
+	c.mu.Unlock()
+	if atLimit {
+		return
+	}
 
 	currentURL, err := url.Parse(rawCurrentURL)
 	if err != nil {
@@ -87,6 +101,8 @@ func (c *Config) crawlPage(rawCurrentURL string) {
 	c.mu.Lock()
 	c.Pages[key] = page
 	c.mu.Unlock()
+
+	fmt.Printf("Crawled %q\n", rawCurrentURL)
 
 	for _, link := range page.OutgoingLinks {
 		c.wg.Add(1)
