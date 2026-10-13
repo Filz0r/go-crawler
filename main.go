@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/filz0r/go-crawler/internal/crawler"
+	"github.com/filz0r/go-crawler/internal/report"
 )
 
 func main() {
@@ -42,9 +43,13 @@ func main() {
 
 	cfg.StartCrawling()
 
+	fileName := "report.json"
 	fmt.Printf("Finished crawling %s, found %d pages\n", baseUrl, len(cfg.Pages))
-	for normalizedURL := range cfg.Pages {
-		fmt.Printf(" - %+v\n", normalizedURL)
+	err = report.WriteJSONReport(cfg.Pages, fileName)
+	if err != nil {
+		fmt.Printf("Error writing report to %s: %s\n", fileName, err)
+		os.Exit(1)
 	}
+	fmt.Printf("Wrote crawling result to %s\n", fileName)
 
 }
